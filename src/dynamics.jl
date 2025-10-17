@@ -123,7 +123,6 @@ function integrate_tree(x::DynamicTree{<:Real}, time::Vector{<:Real})
     nodes = Matrix{Point3f}(undef, length(nodes1), length(time))
     orientations = zeros(3,3,length(nodes1) - 1, length(time))
     rates = zeros(3, length(nodes1) - 1, length(time))
-    println(typeof(nodes1))
     nodes[:,1] = nodes1
     @showprogress desc = "Integrating...\t" for (k,t) in enumerate(time)
         if k == 1
