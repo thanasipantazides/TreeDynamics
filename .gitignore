@@ -1,0 +1,9 @@
+*.DS_Store
+
+Manifest.toml
+*.mp4
+doc/*.png
+doc/latex/
+
+.vscode/
+.zed/
