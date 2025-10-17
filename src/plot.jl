@@ -69,18 +69,17 @@ function time_slide(layout::GLMakie.GridLayout, trees::Vector{DynamicTree{Float6
             new_x = Point3f(dcm_origin + nodes[i].limb.length/4*nodes[i].limb.orientation[:,1])
             new_y = Point3f(dcm_origin + nodes[i].limb.length/4*nodes[i].limb.orientation[:,2])
             new_z = Point3f(dcm_origin + nodes[i].limb.length/4*nodes[i].limb.orientation[:,3])
-            momleaf = nodes[i].pocket["moment_leaf"]
-            momroot = nodes[i].pocket["moment_root"]
-            
-            new_momleaf = norm(momleaf) > 1e-9 ? Point3f(dcm_origin + 2*nodes[i].limb.length/4*nodes[i].limb.orientation*momleaf./norm(momleaf)) : dcm_origin
-            new_momroot = norm(momroot) > 1e-9 ? Point3f(dcm_origin + 2*nodes[i].limb.length/4*nodes[i].limb.orientation*momroot./norm(momroot)) : dcm_origin
-             
             append!(xdynobs[], [dcm_origin, new_x, Point3f(NaN)])
             append!(ydynobs[], [dcm_origin, new_y, Point3f(NaN)])
             append!(zdynobs[], [dcm_origin, new_z, Point3f(NaN)])
+            
+            momleaf = nodes[i].pocket["moment_leaf"]
+            momroot = nodes[i].pocket["moment_root"]
+            new_momleaf = norm(momleaf) > 1e-9 ? Point3f(dcm_origin + 2*nodes[i].limb.length/4*nodes[i].limb.orientation*momleaf./norm(momleaf)) : dcm_origin
+            new_momroot = norm(momroot) > 1e-9 ? Point3f(dcm_origin + 2*nodes[i].limb.length/4*nodes[i].limb.orientation*momroot./norm(momroot)) : dcm_origin
             append!(momrootobs[], [dcm_origin, new_momroot, Point3f(NaN)])
             append!(momleafobs[], [dcm_origin, new_momleaf, Point3f(NaN)])
-            i3 += 3
+            # i3 += 3
         end
         notify(xdynobs)
         notify(ydynobs)
@@ -91,7 +90,7 @@ function time_slide(layout::GLMakie.GridLayout, trees::Vector{DynamicTree{Float6
         # How to do this without recursion? Would be extra handy if 
         # xstaobs = []
     end
-    lines!(ax3d, nobs, color=cobs, linewidth=4)
+    lines!(ax3d, nobs, color=cobs, linewidth=2)
     
     lines!(ax3d, xdynobs, color=:red, linewidth=0.5)
     lines!(ax3d, ydynobs, color=:green, linewidth=0.5)
@@ -99,6 +98,16 @@ function time_slide(layout::GLMakie.GridLayout, trees::Vector{DynamicTree{Float6
     lines!(ax3d, momrootobs, color=:purple, linewidth=0.5)
     lines!(ax3d, momleafobs, color=:cyan, linewidth=0.5)
     
+    return ax3d, slide
+end
+
+function do_recording(ax::GLMakie.LScene, slide::GLMakie.Slider, time::Vector{<:Real}, file::String)
+    println("Saving video...")
+    framerate = 30
+    timestamps = range(1, length(time), step=2)
+    record(ax.parent, file, timestamps; framerate = framerate) do tk
+        set_close_to!(slide, tk)
+    end
 end
 
 function time_slide(fig::GLMakie.Figure, sol, p::TreeLinkage)

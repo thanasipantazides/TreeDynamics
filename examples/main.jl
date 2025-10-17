@@ -58,18 +58,18 @@ function main()
         
     
     println("Plotting...")
-    # AbstractTrees.print_tree(t_root)
-    # println(AbstractTrees.children(t_root))
     
     GLMakie.activate!()
-    fig = Figure(size=(800,800))
-    display(fig)
+    fig = Figure(size=(600,600))
+    # display(fig)
     layout = GridLayout(fig[1, 1], tellheight = false)
     # al = AmbientLight(RGBf(0.4,0.4,0.4))
     layout3d = GridLayout(layout[1,1], tellheight=false)
-    layout2d = GridLayout(layout[1,2])
+    ax3d, slider = time_slide(layout3d, trees, time)
+    do_recording(ax3d, slider, time, "doc/assets/tree_movie.mp4")
+    display(fig)
     
-    time_slide(layout3d, trees, time)
+    layout2d = GridLayout(layout[1,2])
     
     # ls,cs = all_leaf_lines(t_root_init)
     # nl = length(ls)
