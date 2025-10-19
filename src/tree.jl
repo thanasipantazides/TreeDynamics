@@ -137,7 +137,7 @@ function randtree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTree
         mv_orientation = r_euler1(pi/6)
         orientation = base_orientation*mv_orientation
         # orientation = base_orientation
-        # orientation = randr() 
+        orientation = randr() 
         inertia = tree.limb.inertia*0.66
         
         tc = TreeLimb(

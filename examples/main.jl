@@ -66,7 +66,9 @@ function main()
     # al = AmbientLight(RGBf(0.4,0.4,0.4))
     layout3d = GridLayout(layout[1,1], tellheight=false)
     ax3d, slider = time_slide(layout3d, trees, time)
-    # do_recording(ax3d, slider, time, "doc/assets/tree_movie.mp4")
+    
+    do_recording(ax3d, slider, time, "doc/assets/tree_movie.mp4")
+    save("doc/assets/tree_sample.png", fig, px_per_unit = 4)
     display(fig)
     
     layout2d = GridLayout(layout[1,2])
