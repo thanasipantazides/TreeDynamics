@@ -64,3 +64,27 @@ function randr()::Matrix{<:Real}
 
     return I * cang + (1 - cang) * ax * ax' + cross(ax) * sqrt(1 - cang^2)
 end
+
+# function axisangle(X::AbstractMatrix)
+#     λ, V = LinearAlgebra.eigen(Matrix(X))
+#     i = sortperm(λ, by=imag)
+#     ax = real.(V[:, i[2]])
+#     # ang = atan(imag(λ[i[3]]), real(λ[i[3]]))
+
+#     ang = acos(min(1.0, (tr(X) - 1) / 2))
+#     e1 = (X[3, 2] - X[2, 3]) / 2 / sin(ang)
+#     e2 = (X[1, 3] - X[3, 1]) / 2 / sin(ang)
+#     e3 = (X[2, 1] - X[1, 2]) / 2 / sin(ang)
+#     ax = [e1, e2, e3]
+#     return (ax, ang)
+# end
+function axisangle(X::AbstractMatrix)
+    skew = X - X'
+    ax = uncross(skew)
+    λ, V = LinearAlgebra.eigen(Matrix(X))
+    i = sortperm(λ, by=imag)
+    ax = real.(V[:, i[2]])
+    # ax = ax/norm(ax)
+    ang = asin(min(1.0, -imag(λ[i[1]])))
+    return (ax, ang)
+end 

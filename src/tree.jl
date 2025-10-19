@@ -134,9 +134,9 @@ function randtree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTree
         skewang = pi/4 #+ rand()*pi/12
         transform = r_euler3(circang)*r_euler1(skewang)
         base_orientation = tree.limb.base_orientation*transform
-        # mv_orientation = r_euler1(pi/6)
-        # orientation = base_orientation*mv_orientation
-        orientation = base_orientation
+        mv_orientation = r_euler1(pi/6)
+        orientation = base_orientation*mv_orientation
+        # orientation = base_orientation
         # orientation = randr() 
         inertia = tree.limb.inertia*0.66
         

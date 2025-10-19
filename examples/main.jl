@@ -18,8 +18,8 @@ function main()
     t_root = DynamicTree(TreeLimb(
         1.0,        # length
         [0.0, 0.0, 1.0],    # direction
-        1.0e-1,        # stiffness
-        5e-3,       # damping
+        1.0e-2,        # stiffness
+        1e-2,       # damping
         inertia,    # inertia
         # randr(),    # base orientation
         # r_euler1(pi/6),
@@ -66,7 +66,7 @@ function main()
     # al = AmbientLight(RGBf(0.4,0.4,0.4))
     layout3d = GridLayout(layout[1,1], tellheight=false)
     ax3d, slider = time_slide(layout3d, trees, time)
-    do_recording(ax3d, slider, time, "doc/assets/tree_movie.mp4")
+    # do_recording(ax3d, slider, time, "doc/assets/tree_movie.mp4")
     display(fig)
     
     layout2d = GridLayout(layout[1,2])

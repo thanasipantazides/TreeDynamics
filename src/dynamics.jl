@@ -13,23 +13,17 @@ function dynamics!(x::DynamicTree{<:Real}, t)
     if !isnothing(AbstractTrees.parent(x))
         p = AbstractTrees.parent(x)
         # compute root-side moments
-        relative_orientation = AbstractTrees.parent(x).limb.orientation'*x.limb.orientation
         
-        relative_base_orientation = AbstractTrees.parent(x).limb.base_orientation'*x.limb.base_orientation
+        relative_base_orientation = (x.limb.base_orientation'*p.limb.base_orientation)
         
-        # M_c_root = x.limb.damping*(relative_orientation'*AbstractTrees.parent(x).limb.rate - x.limb.rate)
+        relative_orientation = (x.limb.orientation'*p.limb.orientation)
         
-        # this one seems good for damping:
-        # M_c_root = x.limb.damping*(p.limb.rate - x.limb.rate)
-        # M_c_root = x.limb.damping*(x.limb.orientation*p.limb.orientation'*p.limb.rate - x.limb.rate)
+        # M_k_root = x.limb.stiffness*x.limb.orientation'*(cross(p.limb.orientation*p.limb.direction, p.limb.base_orientation*p.limb.direction) .+ cross(x.limb.orientation*x.limb.direction, x.limb.base_orientation*x.limb.direction))
         
-        # M_c_root = -x.limb.damping*x.limb.rate
+        transform = relative_base_orientation*relative_orientation'
+        ax = uncross(transform - transform')
+        M_k_root = -p.limb.stiffness*ax        
         
-        # M_k_root = -x.limb.stiffness*cross(relative_orientation*x.limb.direction, relative_base_orientation*x.limb.direction)
-        # M_k_root = x.limb.stiffness*cross(x.limb.base_orientation*x.limb.direction, x.limb.orientation*x.limb.direction)
-        # k_root_scale = p.limb.stiffness*norm(cross(p.limb.base_orientation'*p.limb.orientation*p.limb.direction, x.limb.base_orientation'*x.limb.orientation*x.limb.direction))
-        # M_k_root = x.limb.stiffness*x.limb.orientation'*cross(cross(p.limb.orientation*p.limb.direction, p.limb.base_orientation*p.limb.direction), cross(x.limb.orientation*x.limb.direction, x.limb.base_orientation*x.limb.direction))
-        M_k_root = x.limb.stiffness*x.limb.orientation'*(cross(p.limb.orientation*p.limb.direction, p.limb.base_orientation*p.limb.direction) .+ cross(x.limb.orientation*x.limb.direction, x.limb.base_orientation*x.limb.direction))
     end
     
     M_c_root = -x.limb.damping*x.limb.rate
@@ -38,39 +32,20 @@ function dynamics!(x::DynamicTree{<:Real}, t)
         # compute leaf-side moments
         for tc in AbstractTrees.children(x)
             # first, cache all the child moments on this limb. Later will recurse.
-            relative_orientation = tc.limb.orientation'*x.limb.orientation
-            # relative_orientation = x.limb.orientation'*tc.limb.orientation
             
-            relative_base_orientation = tc.limb.base_orientation'*x.limb.base_orientation
-            # relative_base_orientation = x.limb.base_orientation'*tc.limb.base_orientation
+            relative_base_orientation = (x.limb.base_orientation'*tc.limb.base_orientation)
             
-            # M_c_leaf .+= x.limb.damping*(relative_orientation'*tc.limb.rate - x.limb.rate)
+            relative_orientation = (x.limb.orientation'*tc.limb.orientation)
             
             # this one seems good for damping:
-            # M_c_leaf .+= x.limb.damping*(tc.limb.rate - x.limb.rate)
             M_c_leaf .+= tc.limb.damping*(x.limb.orientation'*tc.limb.orientation*tc.limb.rate - x.limb.rate)
-            # c_leaf_scale = norm(tc.limb.orientation*tc.limb.rate .- x.limb.orientation*x.limb.rate)
             
-            # # if isnan(c_leaf_scale)
-            # #     println(tc.limb.rate)
-            # #     # println(tc.limb.orientation'*tc.limb.rate .- x.limb.orientation'*x.limb.rate)
-            # # end
-            # c_leaf_ax = zeros(3)
-            # if norm(x.limb.rate) > 1e-9
-            #     c_leaf_ax = x.limb.rate/norm(x.limb.rate)
-            # end
+            # M_k_leaf .+= tc.limb.stiffness*x.limb.orientation'*(cross(tc.limb.orientation*tc.limb.direction, tc.limb.base_orientation*tc.limb.direction) .+ cross(x.limb.orientation*x.limb.direction, x.limb.base_orientation*x.limb.direction))
             
-            # M_c_leaf .+= c_leaf_scale * c_leaf_ax
-
+            transform = relative_base_orientation*relative_orientation'
+            ax = uncross(transform - transform')
             
-            # M_c_leaf .+= x.limb.orientation*tc.limb.orientation'*tc.limb.damping*tc.limb.rate
-            
-            # M_k_leaf .+= -x.limb.stiffness*cross(relative_orientation'*x.limb.direction, relative_base_orientation'*x.limb.direction) 
-            # M_k_leaf .+= x.limb.stiffness*cross(relative_orientation*x.limb.direction, relative_base_orientation*x.limb.direction) 
-            # M_k_leaf .+= x.limb.stiffness*cross(x.limb.base_orientation*x.limb.direction, x.limb.orientation*x.limb.direction)
-            # M_k_leaf = cross(tc.limb.base_orientation'*tc.limb.orientation*tc.limb.direction, x.limb.base_orientation'*x.limb.orientation*x.limb.direction)
-            # M_k_leaf .+= tc.limb.stiffness*x.limb.orientation'*cross(cross(tc.limb.orientation*tc.limb.direction, tc.limb.base_orientation*tc.limb.direction), cross(x.limb.orientation*x.limb.direction, x.limb.base_orientation*x.limb.direction))
-            M_k_leaf .+= tc.limb.stiffness*x.limb.orientation'*(cross(tc.limb.orientation*tc.limb.direction, tc.limb.base_orientation*tc.limb.direction) .+ cross(x.limb.orientation*x.limb.direction, x.limb.base_orientation*x.limb.direction))
+            M_k_leaf .+= -tc.limb.stiffness*ax
         end
     end
     # println(norm(M_k_root), " ", norm(M_k_leaf))
