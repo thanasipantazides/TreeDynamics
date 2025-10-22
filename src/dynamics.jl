@@ -18,14 +18,19 @@ function dynamics!(x::DynamicTree{<:Real}, t)
         
         relative_orientation = (x.limb.orientation'*p.limb.orientation)
         
-        # M_k_root = x.limb.stiffness*x.limb.orientation'*(cross(p.limb.orientation*p.limb.direction, p.limb.base_orientation*p.limb.direction) .+ cross(x.limb.orientation*x.limb.direction, x.limb.base_orientation*x.limb.direction))
-        
         transform = relative_base_orientation*relative_orientation'
         ax = uncross(transform - transform')
-        M_k_root = -p.limb.stiffness*ax        
+        M_k_root = -x.limb.stiffness*ax
         
+        # M_c_root = p.limb.damping*(x.limb.orientation'*p.limb.orientation*p.limb.rate - x.limb.rate)
+        # M_c_root = -x.limb.damping*x.limb.rate
+    else
+        transform = x.limb.base_orientation'*x.limb.orientation'
+        ax = uncross(transform - transform')
+        M_k_root = x.limb.stiffness*ax
+        
+        # M_c_root = -x.limb.damping*x.limb.rate
     end
-    
     M_c_root = -x.limb.damping*x.limb.rate
     
     if !isempty(AbstractTrees.children(x))
@@ -39,8 +44,6 @@ function dynamics!(x::DynamicTree{<:Real}, t)
             
             # this one seems good for damping:
             M_c_leaf .+= tc.limb.damping*(x.limb.orientation'*tc.limb.orientation*tc.limb.rate - x.limb.rate)
-            
-            # M_k_leaf .+= tc.limb.stiffness*x.limb.orientation'*(cross(tc.limb.orientation*tc.limb.direction, tc.limb.base_orientation*tc.limb.direction) .+ cross(x.limb.orientation*x.limb.direction, x.limb.base_orientation*x.limb.direction))
             
             transform = relative_base_orientation*relative_orientation'
             ax = uncross(transform - transform')
@@ -64,14 +67,11 @@ function dynamics!(x::DynamicTree{<:Real}, t)
     end
 end
 
-function step_tree_euler!(x::DynamicTree{<:Real}, dt, t)
-    # note: 
-    # I can advance a dcm C_BA by one timestep like this:
-    #   C_BA[k+1] = exp(cross(omega)*dt)*C_BA[k]
-    # 
-    # The analytic timestepping of the angular acceleration equation (Euler) is a little more involved, I'm not sure I have the Jacobian correct.
-    
+function step_tree_euler!(x::DynamicTree{<:Real}, dt, t)  
     # new_orientation = exp(cross(x.limb.rate)*dt)*x.limb.orientation
+    if any(isnan.(x.limb.rate)) || any(isinf.(x.limb.rate))
+        @warn "\nInf or NaN encountered in angular rate! Try reducing timestep."
+    end
     orientation_discrete_jacobian = exp(cross(x.limb.rate)*dt)
     new_orientation = x.limb.orientation*orientation_discrete_jacobian
     new_rate = x.limb.rate + x.pocket["deriv_rate"]*dt

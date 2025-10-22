@@ -125,7 +125,7 @@ function randtree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTree
         direction = tree.limb.direction
         stiffness = 1/3*tree.limb.stiffness
         damping = 1/3*tree.limb.damping
-        length = 1/2*tree.limb.length
+        length = 2/3*tree.limb.length
         
         rate = rand(3)*1e0
         # rate = zeros(3)

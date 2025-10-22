@@ -17,8 +17,8 @@ function time_slide(layout::GLMakie.GridLayout, trees::Vector{DynamicTree{Float6
     slide = Slider(layout[2,1], range=eachindex(time), startvalue=1)
     
     on(events(ax3d.scene).scroll, priority=100) do (dx, dy)
-        if ispressed(ax3d, Keyboard.left_shift)
-            next = Int(slide.value[] + 10*sign(dy))
+        if ispressed(ax3d, Keyboard.left_super)
+            next = Int(slide.value[] + 5*sign(dy))
             next = min(max(next, 1), length(time))
             # slide.value[] = next
             set_close_to!(slide, next)

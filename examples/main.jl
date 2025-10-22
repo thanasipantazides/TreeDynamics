@@ -12,13 +12,13 @@ end
 
 function main()
     inertia = [
-        10 0 0;
-        0 10 0;
-        0 0 40] * 1e-3
+        1 0 0;
+        0 1 0;
+        0 0 4] * 1e-2
     t_root = DynamicTree(TreeLimb(
         1.0,        # length
         [0.0, 0.0, 1.0],    # direction
-        1.0e-2,        # stiffness
+        2.0e-2,        # stiffness
         1e-2,       # damping
         inertia,    # inertia
         # randr(),    # base orientation
@@ -36,13 +36,11 @@ function main()
     startnodes = [Point3f(0.0)]
     color_root = [RGBAf(0.0,0.0,0.0,1.0)]
     collect_tree_nodes!(startnodes, t_root, color_root)
-    println("\tlength of startnodes: ", length(startnodes))
     treesize = AbstractTrees.treesize(t_root)
     println("\tnumber of nodes: ", treesize)
     
-    println("Integrating...")
-    step = 0.01
-    time = Vector(0:step:10)
+    step = 0.1
+    time = Vector(0:step:40)
     trees, nodes, orientations, rates = integrate_tree(t_root, time)
         
     println("Checking health...")
@@ -55,7 +53,6 @@ function main()
             ratesnorms[i,k] = norm(rates[:, i, k])
         end
     end
-        
     
     println("Plotting...")
     
@@ -67,8 +64,9 @@ function main()
     layout3d = GridLayout(layout[1,1], tellheight=false)
     ax3d, slider = time_slide(layout3d, trees, time)
     
-    do_recording(ax3d, slider, time, "doc/assets/tree_movie.mp4")
-    save("doc/assets/tree_sample.png", fig, px_per_unit = 4)
+    # do_recording(ax3d, slider, time, "doc/assets/tree_movie.mp4")
+    # save("doc/assets/tree_sample.png", fig, px_per_unit = 4)
+    
     display(fig)
     
     layout2d = GridLayout(layout[1,2])
@@ -83,7 +81,7 @@ function main()
     # ##########################################
     # return t_root
     
-    axSO3 =  Axis(layout2d[1,1], xlabel="Time", ylabel=L"\mathrm{SO(3)-ness}")
+    axSO3 =  Axis(layout2d[1,1], xlabel="Time", ylabel=L"\mathrm{SO(3) \ residual}")
     axrate = Axis(layout2d[2,1], xlabel="Time", ylabel=L"\mathbf{\omega}_B")
     
     linkxaxes!(axSO3, axrate)
