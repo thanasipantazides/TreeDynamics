@@ -4,6 +4,8 @@ using LinearAlgebra
 import AbstractTrees
 import Base: show
 
+using Profile, PProf
+
 function Base.show(io::IO, n::DynamicTree)
    str_parent = isnothing(n.parent) ? "no parent" : "with parent"
    str_children = "$(length(AbstractTrees.children(n))) children"
@@ -11,6 +13,8 @@ function Base.show(io::IO, n::DynamicTree)
 end
 
 function main()
+    Profile.clear()
+    
     inertia = [
         1 0 0;
         0 1 0;
@@ -41,8 +45,8 @@ function main()
     
     step = 0.1
     time = Vector(0:step:40)
-    trees, nodes, orientations, rates = integrate_tree(t_root, time)
-        
+    @profile trees, nodes, orientations, rates = integrate_tree(t_root, time)
+    pprof()
     println("Checking health...")
     
     bSO3 = zeros(treesize, length(time))

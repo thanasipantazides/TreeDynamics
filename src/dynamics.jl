@@ -7,6 +7,7 @@ function dynamics!(x::DynamicTree{<:Real}, t)
     M_k_root = zeros(3)
     M_c_leaf = zeros(3)
     M_k_leaf = zeros(3)
+    M_perturb = zeros(3)
     
     relative_orientation = I(3)
     
@@ -51,9 +52,13 @@ function dynamics!(x::DynamicTree{<:Real}, t)
             M_k_leaf .+= -tc.limb.stiffness*ax
         end
     end
+    
+    if "perturb" in keys(x.pocket)
+        M_perturb = (rand(3) .- 0.5)*1e-2
+    end
     # println(norm(M_k_root), " ", norm(M_k_leaf))
     # println(norm(M_k_root), " ", norm(M_k_leaf), " ", norm(M_c_root), " ", norm(M_c_leaf))
-    x.pocket["moment_root"] = M_c_root + M_k_root
+    x.pocket["moment_root"] = M_c_root + M_k_root + M_perturb
     x.pocket["moment_leaf"] = M_c_leaf + M_k_leaf
     
     # at this point we can compute the forward step on this node. But want to do that in a separate pass to preserve the current attitude for descendent nodes to use.

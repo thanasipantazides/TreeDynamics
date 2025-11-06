@@ -253,3 +253,39 @@ function collect_tree_nodes!(root::Vector{Point3f}, node::DynamicTree{<:Real}, c
         end
     end
 end
+
+function collect_tree_nodes!(root::Vector{Point3f}, node::DynamicTree{<:Real}, color_root::Vector{<:Any}, width_root::Vector{<:Real})
+    # trawl the tree and add points for quick plotting
+    
+    for t in AbstractTrees.PreOrderDFS(node)
+        if isnothing(AbstractTrees.parent(t))
+            # if this is the root node, draw again from the initial root element (root[1]):
+            # t.pocket["end_position"] = root[1] + Point3f(t.limb.length*t.limb.base_orientation*t.limb.direction)
+            t.pocket["end_position"] = root[1] + Point3f(t.limb.length*t.limb.orientation*t.limb.direction)
+            
+            push!(root, t.pocket["end_position"])
+            push!(color_root, RGBAf(174/255, 91/255, 46/255, 1.0))
+            t.pocket["limb_width"] = width_root[1]
+            push!(width_root, t.pocket["limb_width"])
+        else
+            # if this has a parent, draw starting from the parent's end position:
+            # t.pocket["end_position"] =  t.parent.pocket["end_position"] + Point3f(t.limb.length*t.limb.base_orientation*t.limb.direction)
+            t.pocket["end_position"] = t.parent.pocket["end_position"] + Point3f(t.limb.length*t.limb.orientation*t.limb.direction)
+            
+            t.pocket["limb_width"] = AbstractTrees.parent(t).pocket["limb_width"]*2/3
+            # push!(root, t.parent.pocket["end_position"])
+            push!(root, t.parent.pocket["end_position"])
+            push!(color_root, RGBAf(0.4,0.73,0.0,1.0))
+            push!(width_root, t.pocket["limb_width"])
+            push!(root, t.pocket["end_position"])
+            push!(color_root, RGBAf(0.4,0.73,0.0,1.0))
+            push!(width_root, t.pocket["limb_width"])
+        end
+        
+        if isempty(AbstractTrees.children(t))
+            push!(root, Point3f(NaN))
+            push!(color_root, RGBAf(0.4,0.73,0.0,0.0))
+            push!(width_root, 1)
+        end
+    end
+end

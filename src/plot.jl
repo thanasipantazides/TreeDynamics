@@ -1,6 +1,52 @@
 import AbstractTrees
 using GLMakie
 
+function idle_animate(layout::GLMakie.GridLayout, tree::DynamicTree, dt::Real)
+    al = AmbientLight(RGBf(0.4,0.4,0.4))
+    ax3d = LScene(
+        layout[1,1],
+        show_axis = false,
+        scenekw = (
+            # lights=[dl, al],
+            lights = [al],
+            # backgroundcolor=:black,
+            clear=true
+        ),
+        tellheight = false
+    )
+    n_nodes = length(collect(AbstractTrees.PreOrderDFS(tree)))
+    nobs = Observable(Point3f[(0.0,0.0,0.0) for i in 1:n_nodes])
+    cobs = Observable([RGBAf(0.0,0.0,0.0,0.0) for i in 1:n_nodes])
+    wobs = Observable([1.0 for i in 1:n_nodes])
+    lines!(ax3d, nobs, color=cobs, linewidth=wobs)
+    
+    fps = 60
+    originp = Point3f(0.0)
+    originc = RGBAf(0,0,0,1)
+    originw = 8.0
+    t = 0
+    while true # integrate the model forever
+        t += dt
+        dynamics!(tree, t)
+        step_tree_euler!(tree, dt, t)
+        
+        nodesk = [originp]
+        colsk = [originc]
+        widthsk = [originw]
+        collect_tree_nodes!(nodesk, tree, colsk, widthsk)
+        nobs[] = nodesk
+        cobs[] = colsk
+        wobs[] = widthsk
+        notify(nobs)
+        notify(cobs)
+        notify(wobs)
+        
+        # cache_end_position!(originp, tree)
+        
+        sleep(1/fps)
+    end
+end
+
 function time_slide(layout::GLMakie.GridLayout, trees::Vector{DynamicTree{Float64}}, time::Vector{<:Real})
     al = AmbientLight(RGBf(0.4,0.4,0.4))
     ax3d = LScene(
