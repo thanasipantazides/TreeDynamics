@@ -12,7 +12,7 @@ function main()
     layout = GridLayout(fig[1, 1], tellheight = false)
     # ax2d = Axis(fig[2,1])
     
-    display(fig)
+    display(fig, title="TreeDynamics")
     
     inertia = [
         1 0 0;
@@ -33,7 +33,8 @@ function main()
     
     println("Building tree...")
     # make_tree!(5,3,t_root)
-    randtree!(6,3,t_root)
+    randtree!(7,3,t_root, length=1)
+    # randtree!(5,5,t_root)
     
     for leaf in AbstractTrees.PreOrderDFS(t_root)
         if isempty(AbstractTrees.children(leaf))
