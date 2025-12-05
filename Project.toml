@@ -1,5 +1,6 @@
 name = "TreeDynamics"
 version = "0.1.0"
+uuid = "c15ae5ad-74e0-43c1-9643-9ce2b79b20f0"
 authors = ["Thanasi Pantazides <thanasipantazides@gmail.com>"]
 
 [deps]
