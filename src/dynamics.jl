@@ -55,6 +55,7 @@ function dynamics!(x::DynamicTree{<:Real}, t)
     
     if "perturb" in keys(x.pocket)
         M_perturb = (rand(3) .- 0.5)*1e-2
+        # M_perturb = x.limb.orientation'*[(rand() - 0.5)*1e-2; 0; 0]
     end
     # println(norm(M_k_root), " ", norm(M_k_leaf))
     # println(norm(M_k_root), " ", norm(M_k_leaf), " ", norm(M_c_root), " ", norm(M_c_leaf))

@@ -115,7 +115,7 @@ function make_tree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTre
     end
 end
 
-function randtree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTree{<:Real}}=nothing)
+function randtree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTree{<:Real}}=nothing; kwargs...)
     if n_depth == 0
         return
     end
@@ -123,12 +123,17 @@ function randtree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTree
     for i in 1:n_breadth
         # do stuff to modify tc
         direction = tree.limb.direction
-        stiffness = 1/3*tree.limb.stiffness
-        damping = 1/3*tree.limb.damping
+        stiffness = 2/3*tree.limb.stiffness
+        damping = 2/3*tree.limb.damping
         length = 2/3*tree.limb.length
-        
-        rate = rand(3)*1e0
-        # rate = zeros(3)
+        if :length in keys(kwargs)
+            println("randomizing branch length")
+            # length = (n_depth/12) + 1/3*rand()*tree.limb.length
+            length = n_depth/12*(1 + 1.5*(rand() - 0.5))
+        end
+            
+        # rate = rand(3)*1e0
+        rate = zeros(3)
         
         circang = 2*pi*(i - 1)/n_breadth #+ rand()*pi/10
         skewang = pi/4 #+ rand()*pi/12
@@ -136,9 +141,9 @@ function randtree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTree
         base_orientation = tree.limb.base_orientation*transform
         mv_orientation = r_euler1(pi/6)
         orientation = base_orientation*mv_orientation
-        # orientation = base_orientation
-        orientation = randr() 
-        inertia = tree.limb.inertia*0.66
+        orientation = base_orientation
+        # orientation = randr() 
+        inertia = tree.limb.inertia*0.75
         
         tc = TreeLimb(
             length,
@@ -154,7 +159,18 @@ function randtree!(n_depth::Int, n_breadth::Int, tree::Union{Nothing,DynamicTree
         nt = DynamicTree(tc, [], tree, nothing)
         
         push!(tree.children, nt)
-        make_tree!(n_depth - 1, n_breadth, nt)
+        if :children in keys(kwargs)
+            println(n_depth)
+            println(rand(0:n_depth))
+            if rand(0:n_depth)^2 < kwargs[:children]^2
+                randtree!(n_depth - 1, n_breadth, nt; kwargs...)
+            else
+                tc.length *= 2
+                tc.inertia = tc.inertia * 2
+            end
+        else
+            randtree!(n_depth - 1, n_breadth, nt; kwargs...)
+        end
     end
 end
 
@@ -272,17 +288,25 @@ function collect_tree_nodes!(root::Vector{Point3f}, node::DynamicTree{<:Real}, c
             # t.pocket["end_position"] =  t.parent.pocket["end_position"] + Point3f(t.limb.length*t.limb.base_orientation*t.limb.direction)
             t.pocket["end_position"] = t.parent.pocket["end_position"] + Point3f(t.limb.length*t.limb.orientation*t.limb.direction)
             
-            t.pocket["limb_width"] = AbstractTrees.parent(t).pocket["limb_width"]*2/3
+            t.pocket["limb_width"] = AbstractTrees.parent(t).pocket["limb_width"]*5/8
             # push!(root, t.parent.pocket["end_position"])
             push!(root, t.parent.pocket["end_position"])
-            push!(color_root, RGBAf(0.4,0.73,0.0,1.0))
+            # push!(color_root, RGBAf(0.4,0.73,0.0,1.0))
+            push!(color_root, RGBAf(174/255, 91/255, 46/255, 1.0))
             push!(width_root, t.pocket["limb_width"])
             push!(root, t.pocket["end_position"])
-            push!(color_root, RGBAf(0.4,0.73,0.0,1.0))
+            # push!(color_root, RGBAf(0.4,0.73,0.0,1.0))
+            push!(color_root, RGBAf(174/255, 91/255, 46/255, 1.0))
             push!(width_root, t.pocket["limb_width"])
         end
         
         if isempty(AbstractTrees.children(t))
+            push!(root, t.pocket["end_position"] - 0.1*Point3f(0.0,0.0,1.0))
+            push!(color_root, RGBAf(0.4,0.73,0.0,1.0))
+            push!(width_root, 0.3)
+            push!(root, t.pocket["end_position"] - 0.3*Point3f(0.0,0.0,1.0))
+            push!(color_root, RGBAf(0.4,0.73,0.0,1.0))
+            push!(width_root, 0.3)
             push!(root, Point3f(NaN))
             push!(color_root, RGBAf(0.4,0.73,0.0,0.0))
             push!(width_root, 1)
